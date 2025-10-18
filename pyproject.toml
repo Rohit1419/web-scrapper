@@ -1,0 +1,13 @@
+[project]
+name = "ecourt-scrapper"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi>=0.119.0",
+    "pydantic>=2.12.3",
+    "selenium>=4.37.0",
+    "uvicorn>=0.38.0",
+    "webdriver-manager>=4.0.2",
+]
