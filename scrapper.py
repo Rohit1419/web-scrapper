@@ -106,5 +106,43 @@ if __name__ == "__main__":
         print(f"Courts in complex ({complex_code}):")
         for court in courts:
             print(f"  - {court['name']} ({court['code']})")
+
+         # Select court
+        court_code = input("Enter the court code to fetch cause list: ").strip()
+        # Select the court name
+        court_dropdown = Select(driver.find_element(By.ID, "CL_court_no"))
+        court_dropdown.select_by_value(court_code)
+        time.sleep(1)
+
+        # Enter cause list date
+        date_str = input("Enter cause list date (DD-MM-YYYY): ").strip()
+        date_input = driver.find_element(By.ID, "causelist_date")
+        date_input.clear()
+        date_input.send_keys(date_str)
+        time.sleep(1)
+
+        # Pause for CAPTCHA
+        print("\nIf CAPTCHA is shown in browser, please solve it manually.")
+        input("Press ENTER after solving CAPTCHA to continue...")
+
+        # Submit the form for Civil or Criminal cause list
+        case_type = input("Enter case type (civil/criminal): ").strip().lower()
+        if case_type == "civil":
+            submit_btn = driver.find_element(By.XPATH, "//button[contains(text(), 'Civil')]")
+        else:
+            submit_btn = driver.find_element(By.XPATH, "//button[contains(text(), 'Criminal')]")
+        submit_btn.click()
+        time.sleep(3)
+
+        # Look for PDF download link
+        try:
+            pdf_link = driver.find_element(By.LINK_TEXT, "Download Cause List")
+            pdf_url = pdf_link.get_attribute("href")
+            print(f"PDF available at: {pdf_url}")
+            pdf_link.click()
+            print("PDF download initiated (check your browser's download folder).")
+        except Exception as e:
+            print("No PDF download link found or error occurred:", e)
+        
     finally:
         driver.quit()
