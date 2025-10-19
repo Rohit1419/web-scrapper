@@ -62,7 +62,42 @@ def main():
         print("\nSolve the CAPTCHA in the browser if prompted.")
         input("Press ENTER after solving CAPTCHA to continue...")
         driver.find_element(By.CSS_SELECTOR, "input[type='submit'][value='Search']").click()
-        time.sleep(3)
+        # Waiting for  for tables to appear
+        try:
+            
+            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".distTableContent")))
+            time.sleep(2)  
+
+            dist_contents = driver.find_elements(By.CSS_SELECTOR, ".distTableContent")
+            found_table = False
+            for content in dist_contents:
+                tables = content.find_elements(By.TAG_NAME, "table")
+                for table in tables:
+                    found_table = True
+                    caption_elems = table.find_elements(By.TAG_NAME, "caption")
+                    caption = caption_elems[0].text if caption_elems else "Cause List"
+                    print(f"\n=== {caption} ===")
+                    headers = [th.text for th in table.find_elements(By.TAG_NAME, "th")]
+                    if headers:
+                        print(" | ".join(headers))
+                    for row in table.find_elements(By.TAG_NAME, "tr")[1:]:
+                        cells = []
+                        for td in row.find_elements(By.TAG_NAME, "td"):
+                            bt_content = td.find_elements(By.CLASS_NAME, "bt-content")
+                            if bt_content:
+                                cells.append(bt_content[0].text)
+                            else:
+                                cells.append(td.text)
+                        if cells:
+                            print(" | ".join(cells))
+            if not found_table:
+                print("No tables found in .distTableContent. Printing raw HTML for debugging:")
+                for content in dist_contents:
+                    print(content.get_attribute("outerHTML"))
+        except Exception as e:
+            print("Error fetching cause list:", e)
+
+        input("\nPress ENTER to close browser...")
         
     finally:
         driver.quit()
