@@ -8,7 +8,7 @@ import uuid
 import os
 from datetime import datetime
 
-# Import your scraper functions
+#  scraper functions
 from delhi_scrappper import get_courts, save_all_tables_to_pdf
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -18,10 +18,10 @@ import time
 
 app = FastAPI(title="ecourt-scraper")
 
-# Add CORS middleware for React frontend
+#  CORS middleware for React frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # React dev server
+    allow_origins=["http://localhost:5173"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -65,7 +65,7 @@ def health():
 async def get_available_courts():
     """Get list of available courts"""
     try:
-        # Setup browser in headless mode for this quick operation
+        
         options = webdriver.ChromeOptions()
         options.add_argument("--headless")
         options.add_argument("--no-sandbox")
@@ -106,7 +106,7 @@ async def start_scraping(request: ScrapeRequest, background_tasks: BackgroundTas
         "pdf_url": None
     }
     
-    # Start scraping in background
+    
     background_tasks.add_task(run_scraper, session_id, request)
     
     return ScrapeResponse(
@@ -161,19 +161,19 @@ async def run_scraper(session_id: str, request: ScrapeRequest):
     session = active_sessions[session_id]
     
     try:
-        # Setup browser
+        
         session["status"] = "initializing"
         session["message"] = "Setting up browser..."
         
         options = webdriver.ChromeOptions()
-        # Don't use headless mode so user can solve CAPTCHA
+        
         options.add_argument("--start-maximized")
         
         driver = webdriver.Chrome(options=options)
         wait = WebDriverWait(driver, 15)
         session["driver"] = driver
         
-        # Get courts
+        
         session["message"] = "Loading courts..."
         courts = get_courts(driver, wait)
         
@@ -182,12 +182,12 @@ async def run_scraper(session_id: str, request: ScrapeRequest):
         
         selected_court = courts[request.court_index]
         
-        # Select court
+       
         session["message"] = "Selecting court..."
         Select(driver.find_element(By.ID, "court")).select_by_value(selected_court['code'])
         time.sleep(1)
         
-        # Set date
+        
         session["message"] = "Setting date..."
         driver.find_element(By.CSS_SELECTOR, ".icon[aria-label^='Choose Date']").click()
         time.sleep(1)
@@ -195,7 +195,7 @@ async def run_scraper(session_id: str, request: ScrapeRequest):
         date_btn.click()
         time.sleep(1)
         
-        # Set case type
+        
         session["message"] = "Setting case type..."
         if request.case_type.lower() == "criminal":
             driver.find_element(By.ID, "chkCauseTypeCriminal").click()
@@ -203,13 +203,13 @@ async def run_scraper(session_id: str, request: ScrapeRequest):
             driver.find_element(By.ID, "chkCauseTypeCivil").click()
         time.sleep(1)
         
-        # Wait for CAPTCHA to be solved
+        
         session["status"] = "captcha_required"
         session["message"] = "Please solve CAPTCHA in the browser window"
         session["captcha_solved"] = False
         
-        # Wait for user to solve CAPTCHA (check every 2 seconds)
-        timeout = 300  # 5 minutes timeout
+        
+        timeout = 300  
         elapsed = 0
         while not session.get("captcha_solved", False) and elapsed < timeout:
             await asyncio.sleep(2)
@@ -218,16 +218,16 @@ async def run_scraper(session_id: str, request: ScrapeRequest):
         if not session.get("captcha_solved", False):
             raise Exception("CAPTCHA timeout - please try again")
         
-        # Submit search
+        
         session["status"] = "processing"
         session["message"] = "Searching for cause list..."
         driver.find_element(By.CSS_SELECTOR, "input[type='submit'][value='Search']").click()
         
-        # Wait for results
+        
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".distTableContent")))
         time.sleep(2)
         
-        # Extract data
+        
         session["message"] = "Extracting cause list data..."
         dist_contents = driver.find_elements(By.CSS_SELECTOR, ".distTableContent")
         all_tables = []

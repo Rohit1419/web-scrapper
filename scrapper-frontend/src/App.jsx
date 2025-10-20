@@ -93,7 +93,13 @@ function App() {
         </div>
 
         <div className="text-center mt-12 text-gray-500 text-sm">
-          <p>Built for educational purposes. Please use responsibly.</p>
+          <p>
+            <span className="font-bold">Try this out:</span>
+            <br />
+            Court = 52 Sh. Dharmender Rana...
+            <br /> Date = 2025-10-16
+            <br /> Case Type = Civil
+          </p>
         </div>
       </div>
     </div>

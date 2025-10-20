@@ -12,8 +12,28 @@ const CourtSelector = ({ onSubmit, disabled }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Calculate date range (last 7 days)
+  const getDateRange = () => {
+    const today = new Date();
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(today.getDate() - 7);
+
+    const formatDate = (date) => {
+      return date.toISOString().split("T")[0];
+    };
+
+    return {
+      min: formatDate(sevenDaysAgo),
+      max: formatDate(today),
+    };
+  };
+
+  const dateRange = getDateRange();
+
   useEffect(() => {
     loadCourts();
+    // Set default date to today
+    setDate(dateRange.max);
   }, []);
 
   const loadCourts = async () => {
@@ -28,11 +48,37 @@ const CourtSelector = ({ onSubmit, disabled }) => {
     }
   };
 
+  const handleDateChange = (e) => {
+    const selectedDate = e.target.value;
+    const today = new Date().toISOString().split("T")[0];
+    const sevenDaysAgo = dateRange.min;
+
+    if (selectedDate > today) {
+      setError("Cannot select future dates");
+      return;
+    }
+
+    if (selectedDate < sevenDaysAgo) {
+      setError("Date must be within the last 7 days");
+      return;
+    }
+
+    setError("");
+    setDate(selectedDate);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
     if (!selectedCourt || !date) {
       setError("Please select a court and date");
+      return;
+    }
+
+    // Double check date validation
+    const today = new Date().toISOString().split("T")[0];
+    if (date > today || date < dateRange.min) {
+      setError("Please select a date within the last 7 days");
       return;
     }
 
@@ -88,15 +134,23 @@ const CourtSelector = ({ onSubmit, disabled }) => {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Date
+              <span className="text-xs text-gray-500 ml-1">
+                (Within last 7 days)
+              </span>
             </label>
             <input
               type="date"
               value={date}
-              onChange={(e) => setDate(e.target.value)}
+              onChange={handleDateChange}
+              min={dateRange.min}
+              max={dateRange.max}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={disabled}
               required
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Available: {dateRange.min} to {dateRange.max}
+            </p>
           </div>
 
           {/* Case Type Selection */}
